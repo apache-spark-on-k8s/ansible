@@ -1,0 +1,92 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Usage:
+#      $ cp vars/settings.yml.template vars/settings.yml
+#
+#      Fill out vars/settings.yml.
+#
+#      $ ansible-playbook -i TARGET-HOST build_dockers.yml [OPTIONS]...
+#
+# Required parameters should be specified in vars/settings.yml or --extra-vars
+# ansible command line parameter. For details, see vars/settings.yml.template.
+#
+# Examples:
+# To run on your localhost (Note comma is needed after localhost):
+# $ ansible-playbook -i localhost, build_dockers.yml -c local
+#
+# To run this on a remote host, say build01, as root:
+# $ ansible-playbook -i build01, build_dockers.yml  \
+#       --become --become-user root --ask-become-pass
+- hosts: all
+  vars_files:
+    - vars/settings.yml
+  tasks:
+    - assert:
+        that: ansible_version.major >= 2
+        msg: "Only supports ansible version 2.x."
+
+    - assert:
+        that: dist_path_or_url is defined
+        msg: >
+          'dist_path_or_url' should point to a URL of a Spark distribution
+          package.  See vars/settings.yml.template for details.
+
+    - assert:
+        that: docker_registry is defined
+        msg: >
+          'docker_registry' should specify docker registry host and port.
+          See vars/settings.yml.template for details.
+
+    - name: Create a temporary workdir
+      command: mktemp -d /tmp/build-images-workdir-XXXXX
+      register: _workdir_register
+
+    - name: Set workdir as fact
+      set_fact: _workdir={{ _workdir_register.stdout }}
+
+    - block:
+        # NOTE. The unarchive module is broken with macOS BSD tar. Install
+        # GNU tar and make sure your path points it for the tar command.
+        # See https://github.com/ansible/ansible-modules-core/issues/3952.
+        - name: Unarchive dist
+          unarchive:
+            src: "{{ dist_path_or_url }}"
+            dest: "{{ _workdir }}"
+            copy: no
+
+        - name: Locate the unarchived
+          command: ls -1 "{{ _workdir }}/"
+          register: _ls_register
+
+        - name: Set package subdir as fact
+          set_fact: _package_subdir={{ _ls_register.stdout }}
+
+        - name: Build and push images
+          shell: >
+            docker build -t {{ docker_registry }}/spark-{{ item }}:latest  \
+                -f dockerfiles/{{ item }}/Dockerfile .  &&
+            docker push {{ docker_registry }}/spark-{{ item }}:latest
+          args:
+            chdir: "{{ _workdir }}/{{ _package_subdir }}"
+          with_items:
+            - driver
+            - executor
+
+    - always:
+        - name: Remove workdir
+          file: 
+            path: "{{ _workdir }}"
+            state: absent

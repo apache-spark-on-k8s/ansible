@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Copy this file to settings.yml and specify parameters below.
+
+# Required. Uncomment and specify a path or URL of a Spark distribution package
+# that has k8s support. A package can be built by dev/make-distribution.sh in
+# the Spark code.  For example, the following command will produce something
+# like spark-2.2.0-snapshot-bin-k8s-20170117.tgz.
+#
+#    $ ./dev/make-distribution.sh --name k8s-20170117 --tgz -Phadoop-2.6  \
+#        -Pkubernetes
+#
+# Then, you can upload it to a web server and specify the URL here.
+# Alternatively, if the package is on your target host, you can specify the
+# local path. Supported file formats are .tgz, and .zip.
+#
+# Examples:
+# dist_path_or_url: http://myhost/spark-2.2.0-snapshot-bin-k8s-20170117.tgz
+# dist_path_or_url: /tmp/spark-2.2.0-snapshot-bin-k8s-20170117.tgz
+#
+#dist_path_or_url: PATH or URL
+
+# Required. Uncomment and specify hostname and port of a docker registry that
+# images can be pushed to.  e.g. host1:5000.
+#
+# Examples:
+# docker_registry: myhost:5000
+#
+#docker_registry: HOST:PORT
+
+# Required. Uncomment and specify the URL of the API server of your kubernetes
+# cluster.
+#
+# Exampels:
+# k8s_api_server_url: https://192.168.6.151:6443
+#
+#k8s_api_server_url: URL
+
+# Required. Modify the default value below if necessary.  This is the path of
+# the dir under which the Spark client package will be installed.
+#
+install_dir: /opt/

@@ -1,0 +1,127 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Usage:
+#      $ cp vars/settings.yml.template vars/settings.yml
+#
+#      Fill out vars/settings.yml.
+#
+#      $ ansible-playbook -i INVENTORY install_clients.yml [OPTIONS]...
+#
+# Required parameters should be specified in vars/settings.yml or --extra-vars
+# ansible command line parameter. For details, see vars/settings.yml.template.
+#
+# Examples:
+# To run on your localhost as root:
+# $ ansible-playbook -i localhost, install_clients.yml -c local  \
+#       --become --become-user root --ask-become-pass
+#
+# To run this on remote hosts, say build01-03, as root:
+# $ ansible-playbook -i build01,build02,build03, install_clients.yml  \
+#       --become --become-user root
+- hosts: all
+  vars_files:
+    - vars/settings.yml
+  tasks:
+    - assert:
+        that: ansible_version.major >= 2
+        msg: "Only supports ansible version 2.x."
+
+    - assert:
+        that: dist_path_or_url is defined
+        msg: >
+          'dist_path_or_url' should point to a URL of a Spark distribution
+          package.  See vars/settings.yml.template for details.
+
+    - assert:
+        that: k8s_api_server_url is defined
+        msg: >
+          'k8s_api_server_url' should point to a URL of your kubernetes
+          API server.  See vars/settings.yml.template for details.
+
+    - assert:
+        that: docker_registry is defined
+        msg: >
+          'docker_registry' should specify docker registry host and port.
+          See vars/settings.yml.template for details.
+
+    - assert:
+        that: install_dir is defined
+        msg: >
+          'install_dir' should specify a dir under which the unpacked
+          package should be installed. e.g. /usr/local/ or /opt/.
+          See vars/settings.yml.template for details.
+
+    - name: Create a temporary workdir
+      command: mktemp -d /tmp/build-images-workdir-XXXXX
+      register: _workdir_register
+
+    - name: Set workdir as fact
+      set_fact: _workdir={{ _workdir_register.stdout }}
+
+    - block:
+        # NOTE. The unarchive module is broken with macOS BSD tar. Install
+        # GNU tar and make sure your path points it for the tar command.
+        # See https://github.com/ansible/ansible-modules-core/issues/3952.
+        - name: Unarchive dist
+          unarchive:
+            src: "{{ dist_path_or_url }}"
+            dest: "{{ _workdir }}"
+            copy: no
+
+        - name: Locate the unarchived
+          command: ls -1 "{{ _workdir }}/"
+          register: _ls_register
+
+        - name: Set package subdir as fact
+          set_fact: _package_subdir={{ _ls_register.stdout }}
+
+        - name: Set full target path as fact
+          set_fact: _package_dir="{{ install_dir }}/{{ _package_subdir}}"
+
+        - name: Stat the target dir
+          stat:
+            path: "{{ _package_dir }}"
+          register: _stat_register
+
+        - name: Rename the target dir if it already exists
+          shell: >
+            export DATETIME=`date "+%Y%m%d%H%M%S"`;
+            mv {{ _package_dir }} {{ _package_dir }}.backup-${DATETIME}
+          when: _stat_register.stat.exists
+
+        - name: Move package to {{ install_dir }}
+          command: >
+            mv {{ _workdir }}/{{ _package_subdir }} {{ install_dir }}
+
+        - name: Create symlink {{ install_dir }}/spark-on-k8s
+          file:
+            src: "{{ _package_dir }}"
+            dest: "{{ install_dir }}/spark-on-k8s"
+            state: link
+
+        - name: Fill out Spark default config files
+          template:
+            src: "templates/{{ item }}.j2"
+            dest: "{{ _package_dir }}/conf/{{ item }}"
+            backup: yes
+          with_items:
+            - spark-defaults.conf
+
+    - always:
+        - name: Remove workdir
+          file: 
+            path: "{{ _workdir }}"
+            state: absent

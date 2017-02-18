@@ -1,0 +1,79 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Usage:
+#      $ cp vars/settings.yml.template vars/settings.yml
+#
+#      Fill out vars/settings.yml.
+#
+#      $ ansible-playbook -i INVENTORY run_example_jobs.yml [OPTIONS]...
+#
+# Required parameters should be specified in vars/settings.yml or --extra-vars
+# ansible command line parameter. For details, see vars/settings.yml.template.
+#
+# You should have a client package installed on the host that this playbook
+# targets. See install_clients.yml for details.
+#
+# Examples:
+# To run on your localhost:
+# $ ansible-playbook -i localhost, run_example_jobs.yml -c local
+#
+# To run this on remote hosts, say build01:
+# $ ansible-playbook -i build01, run_example_jobs.yml
+- hosts: all
+  vars_files:
+    - vars/settings.yml
+  tasks:
+    - assert:
+        that: ansible_version.major >= 2
+        msg: "Only supports ansible version 2.x."
+
+    - assert:
+        that: install_dir is defined
+        msg: >
+          'install_dir' should specify a dir under which the client package is
+          installed. e.g. /usr/local/ or /opt/.
+          See vars/settings.yml.template for details.
+
+    - name: Set client dir as fact
+      set_fact: _client_dir={{ install_dir }}/spark-on-k8s
+
+    - name: Stat the client dir
+      stat:
+        path: "{{ _client_dir }}"
+      register: _stat_register
+
+    - assert:
+        that: _stat_register.stat.exists
+        msg: >
+          A client package should have been installed at {{ _client_dir }}.
+          See install_clients.yml for details.
+
+    - name: Locate the examples jar
+      shell: ls -1 {{ _client_dir }}/examples/jars/spark-examples_*.jar
+      register: _ls_register
+
+    - name: Set the examples jar path as fact
+      set_fact: _examples_jar={{ _ls_register.stdout }}
+
+    - name: Run SparkPi
+      command: >
+        {{ _client_dir }}/bin/spark-submit
+            --class org.apache.spark.examples.SparkPi
+            --conf spark.executor.instances=3
+            --conf spark.kubernetes.driverSubmitTimeout=300
+            {{ _examples_jar }} 10000
+      async: 600  # Time out and fail in case it hangs
+      poll: 10

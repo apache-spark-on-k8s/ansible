@@ -73,7 +73,15 @@
         {{ _client_dir }}/bin/spark-submit
             --class org.apache.spark.examples.SparkPi
             --conf spark.executor.instances=3
-            --conf spark.kubernetes.driverSubmitTimeout=300
+            --conf spark.kubernetes.driverSubmitTimeout=180
             {{ _examples_jar }} 10000
-      async: 600  # Time out and fail in case it hangs
+      async: 300  # Time out in case it hangs
       poll: 10
+      register: _result_register
+      ignore_errors: True  # To fail after showing more info below.
+
+    - debug: var=_result_register.stdout_lines
+
+    - name: Check the command result
+      fail: msg="Command failed or timed out"
+      when: "_result_register.rc != 0"

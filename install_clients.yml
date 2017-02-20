@@ -58,6 +58,12 @@
           See vars/settings.yml.template for details.
 
     - assert:
+        that: docker_tag is defined
+        msg: >
+          'docker_tag' should specify docker tag string.
+          See vars/settings.yml.template for details.
+
+    - assert:
         that: install_dir is defined
         msg: >
           'install_dir' should specify a dir under which the unpacked

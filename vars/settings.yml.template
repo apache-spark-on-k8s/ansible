@@ -41,6 +41,11 @@
 #
 #docker_registry: HOST:PORT
 
+# Required. Modify the default value below if necessary.  This is the tag
+# associated with the docker images that we'll use.
+#
+docker_tag: latest
+
 # Required. Uncomment and specify the URL of the API server of your kubernetes
 # cluster.
 #

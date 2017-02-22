@@ -50,6 +50,12 @@
           'docker_registry' should specify docker registry host and port.
           See vars/settings.yml.template for details.
 
+    - assert:
+        that: docker_tag is defined
+        msg: >
+          'docker_tag' should specify docker tag string.
+          See vars/settings.yml.template for details.
+
     - name: Create a temporary workdir
       command: mktemp -d /tmp/build-images-workdir-XXXXX
       register: _workdir_register
@@ -76,9 +82,10 @@
 
         - name: Build and push images
           shell: >
-            docker build -t {{ docker_registry }}/spark-{{ item }}:latest  \
+            docker build  \
+                -t {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}  \
                 -f dockerfiles/{{ item }}/Dockerfile .  &&
-            docker push {{ docker_registry }}/spark-{{ item }}:latest
+            docker push {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}
           args:
             chdir: "{{ _workdir }}/{{ _package_subdir }}"
           with_items:

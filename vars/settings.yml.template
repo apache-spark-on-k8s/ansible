@@ -58,3 +58,11 @@ docker_tag: latest
 # the dir under which the Spark client package will be installed.
 #
 install_dir: /opt/
+
+# Optional. Please set this only, if you are building developer dockers.
+# Represents the path to the spark kubernetes jar which needs to go into the
+# docker image.
+# spark_kubernetes_jar_path: /tmp/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar
+
+# Optional. Base image to be used to build dev driver and executor dockers.
+# docker_base_image: spark-kube:latest

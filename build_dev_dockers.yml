@@ -25,10 +25,10 @@
 #
 # Examples:
 # To run on your localhost (Note comma is needed after localhost):
-# $ ansible-playbook -i localhost, build_dockers.yml -c local
+# $ ansible-playbook -i localhost, build_dev_dockers.yml -c local
 #
 # To run this on a remote host, say build01, as root:
-# $ ansible-playbook -i build01, build_dockers.yml  \
+# $ ansible-playbook -i build01, build_dev_dockers.yml  \
 #       --become --become-user root --ask-become-pass
 - hosts: all
   vars_files:
@@ -51,15 +51,15 @@
           See vars/settings.yml.template for details.
 
     - assert:
-        that: docker_base_image is defined
+        that: dev_docker_base_image is defined
         msg: >
-          'docker_base_image' should specify the base image to be used to create docker images.
+          'dev_docker_base_image' should specify the base image to be used to create docker images.
           See vars/settings.yml.template for details.
 
     - assert:
-        that: docker_tag is defined
+        that: dev_docker_tag is defined
         msg: >
-          'docker_tag' should specify docker tag string.
+          'dev_docker_tag' should specify docker tag string.
           See vars/settings.yml.template for details.
 
     - name: Create a temporary workdir
@@ -76,7 +76,7 @@
       copy: src="{{ spark_kubernetes_jar_path }}" dest="{{ _workdir }}/jars" remote_src=True
 
     - name : Generate Dockerfile content
-      set_fact: dockerfile_content="FROM {{ docker_base_image }}\nCOPY jars /opt/spark/jars\n"
+      set_fact: dockerfile_content="FROM {{ dev_docker_base_image }}\nCOPY jars /opt/spark/jars\n"
 
     # Create a blank file
     - name: Create an empty Dockerfile
@@ -92,9 +92,9 @@
         - name: Build and push images
           shell: >
             docker build  \
-                -t {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}  \
+                -t {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}  \
                 -f Dockerfile .  &&
-            docker push {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}
+            docker push {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}
           args:
             chdir: "{{ _workdir }}"
           with_items:

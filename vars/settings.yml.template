@@ -65,4 +65,4 @@ install_dir: /opt/
 # spark_kubernetes_jar_path: /tmp/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar
 
 # Optional. Base image to be used to build dev driver and executor dockers.
-# docker_base_image: spark-kube:latest
+# dev_docker_base_image: spark-kube:latest

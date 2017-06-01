@@ -92,6 +92,8 @@
             - driver
             - executor
             - init-container
+            - resource-staging-server
+            - shuffle-service
 
     - always:
         - name: Remove workdir

@@ -91,6 +91,7 @@
           with_items:
             - driver
             - executor
+            - init-container
 
     - always:
         - name: Remove workdir

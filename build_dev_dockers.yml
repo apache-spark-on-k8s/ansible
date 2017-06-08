@@ -91,7 +91,7 @@
         # See https://github.com/ansible/ansible-modules-core/issues/3952.
         - name: Build and push images
           shell: >
-            docker build  \
+            docker build --no-cache  \
                 -t {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}  \
                 -f Dockerfile .  &&
             docker push {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}
@@ -100,6 +100,7 @@
           with_items:
             - driver
             - executor
+            - init-container
 
     - always:
         - name: Remove workdir

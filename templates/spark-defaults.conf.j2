@@ -18,4 +18,5 @@ spark.submit.deployMode cluster
 spark.master k8s://{{ k8s_api_server_url }}
 spark.kubernetes.driver.docker.image {{ docker_registry }}/spark-driver:{{ docker_tag }}
 spark.kubernetes.executor.docker.image {{ docker_registry }}/spark-executor:{{ docker_tag }}
+spark.kubernetes.initcontainer.docker.image {{ docker_registry }}/spark-init-container:{{ docker_tag }}
 spark.kubernetes.namespace default

@@ -82,7 +82,7 @@
 
         - name: Build and push images
           shell: >
-            docker build  \
+            docker build --no-cache  \
                 -t {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}  \
                 -f dockerfiles/{{ item }}/Dockerfile .  &&
             docker push {{ docker_registry }}/spark-{{ item }}:{{ docker_tag }}
@@ -91,6 +91,9 @@
           with_items:
             - driver
             - executor
+            - init-container
+            - resource-staging-server
+            - shuffle-service
 
     - always:
         - name: Remove workdir

@@ -80,6 +80,14 @@
         - name: Set package subdir as fact
           set_fact: _package_subdir={{ _ls_register.stdout }}
 
+        - name: Build spark-base image locally
+          shell: >
+            docker build --no-cache  \
+                -t spark-base:latest  \
+                -f dockerfiles/spark-base/Dockerfile .
+          args:
+            chdir: "{{ _workdir }}/{{ _package_subdir }}"
+
         - name: Build and push images
           shell: >
             docker build --no-cache  \

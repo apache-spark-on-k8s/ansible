@@ -74,7 +74,9 @@ install_dir: /opt/
 #
 # Examples:
 # custom_docker_extra_files:
-#   - source: "/target/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar"
-#     target: "/opt/spark/jars"
+#   - source: /mydir/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar
+#     target: /opt/spark/jars/
+#   - source: /mydir/log4j.properties
+#     target: /opt/spark/conf/
 #
 #custom_docker_extra_files:

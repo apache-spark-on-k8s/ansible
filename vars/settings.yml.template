@@ -62,21 +62,19 @@ install_dir: /opt/
 # Optional. Please set the following properties only if you are building
 # custom dockers.
 
-# Base image to be used to build custom driver, executor, init-container dockers.
-#
-#custom_docker_base_image_tag: latest
-
 # Represents the tag to be used by custom docker driver and executor images.
 #
 #custom_docker_tag: custom_latest
 
-# Extra files to copy to the custom docker images. Each file item should have
-# a unique label, followed by the source and destination paths.
+# List of extra files or directories to copy to the custom docker images.
+# Each item should have the source and target paths. The source path is a local
+# file or directory. The target path is a file or directory inside the docker.
+# The source file or directory will be copied to a subdir inside the work dir
+# and supplied to the docker COPY command.
 #
 # Examples:
 # custom_docker_extra_files:
-#   spark-k8s-jar:
-#     src: /tmp/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar: 
-#     dest: jars
+#   - source: "/target/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar"
+#     target: "/opt/spark/jars"
 #
 #custom_docker_extra_files:

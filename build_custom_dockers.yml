@@ -18,7 +18,7 @@
 #
 #      Fill out vars/settings.yml.
 #
-#      $ ansible-playbook -i TARGET-HOST build_dockers.yml [OPTIONS]...
+#      $ ansible-playbook -i TARGET-HOST build_custom_dockers.yml [OPTIONS]...
 #
 # Required parameters should be specified in vars/settings.yml or --extra-vars
 # ansible command line parameter. For details, see vars/settings.yml.template.
@@ -26,10 +26,6 @@
 # Examples:
 # To run on your localhost (Note comma is needed after localhost):
 # $ ansible-playbook -i localhost, build_custom_dockers.yml -c local
-#
-# To run this on a remote host, say build01, as root:
-# $ ansible-playbook -i build01, build_custom_dockers.yml  \
-#       --become --become-user root --ask-become-pass
 - hosts: all
   vars_files:
     - vars/settings.yml
@@ -39,28 +35,28 @@
         msg: "Only supports ansible version 2.x."
 
     - assert:
-        that: spark_kubernetes_jar_path is defined
-        msg: >
-          'spark_kubernetes_jar_path' should point to a path of a Spark kubernetes
-          jar.  See vars/settings.yml.template for details.
-
-    - assert:
         that: docker_registry is defined
         msg: >
           'docker_registry' should specify docker registry host and port.
           See vars/settings.yml.template for details.
 
     - assert:
-        that: custom_docker_base_image_tag is defined
+        that: docker_tag is defined
         msg: >
-          'custom_docker_base_image_tag' should specify the base image to be
-          used to create docker images.
+          'docker_tag' should specify a docker tag string pointing to
+          dockers that custom docker images would use as base images.
           See vars/settings.yml.template for details.
 
     - assert:
         that: custom_docker_tag is defined
         msg: >
-          'custom_docker_tag' should specify docker tag string.
+          'custom_docker_tag' should specify a docker tag string.
+          See vars/settings.yml.template for details.
+
+    - assert:
+        that: custom_docker_extra_files is defined
+        msg: >
+          'custom_docker_extra_files' should be dfined.
           See vars/settings.yml.template for details.
 
     - name: Create a temporary workdir
@@ -72,7 +68,13 @@
 
     - block:
 
-      - include: gen_dockerfile_and_build.yml workdir="{{ _workdir }} container="{{ item }}"
+      - name: "Copy files to {{ _workdir }}/tmp that Dockerfile can refer to"
+        copy:
+          src: "{{ item.source }}"
+          dest: "{{ _workdir }}/tmp{{ item.source }}"
+        with_items: "{{ custom_docker_extra_files }}"
+
+      - include: tasks/custom-docker/gen_dockerfile_and_build.yml workdir="{{ _workdir }}" container="{{ item }}"
         with_items:
           - driver
           - executor

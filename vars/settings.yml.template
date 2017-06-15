@@ -59,14 +59,24 @@ docker_tag: latest
 #
 install_dir: /opt/
 
-# Optional. Please set the following properties only if you are building developer dockers.
+# Optional. Please set the following properties only if you are building
+# custom dockers.
 
-# Represents the tag to be used by dev docker driver and executor images.
-# dev_docker_tag: dev_latest
+# Base image to be used to build custom driver, executor, init-container dockers.
+#
+#custom_docker_base_image_tag: latest
 
-# Represents the path to the spark kubernetes jar which needs to go into the
-# docker image.
-# spark_kubernetes_jar_path: /tmp/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar
+# Represents the tag to be used by custom docker driver and executor images.
+#
+#custom_docker_tag: custom_latest
 
-# Base image to be used to build dev driver and executor dockers.
-# dev_docker_base_image: spark-kube:latest
+# Extra files to copy to the custom docker images. Each file item should have
+# a unique label, followed by the source and destination paths.
+#
+# Examples:
+# custom_docker_extra_files:
+#   spark-k8s-jar:
+#     src: /tmp/spark-kubernetes_2.11-2.1.0-k8s-0.1.0-SNAPSHOT.jar: 
+#     dest: jars
+#
+#custom_docker_extra_files:

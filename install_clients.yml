@@ -120,7 +120,7 @@
 
         - name: Fill out Spark default config files
           template:
-            src: "templates/{{ item }}.j2"
+            src: "templates/client/{{ item }}.j2"
             dest: "{{ _package_dir }}/conf/{{ item }}"
             backup: yes
           with_items:

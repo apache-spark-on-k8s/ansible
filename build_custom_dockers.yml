@@ -25,10 +25,10 @@
 #
 # Examples:
 # To run on your localhost (Note comma is needed after localhost):
-# $ ansible-playbook -i localhost, build_dev_dockers.yml -c local
+# $ ansible-playbook -i localhost, build_custom_dockers.yml -c local
 #
 # To run this on a remote host, say build01, as root:
-# $ ansible-playbook -i build01, build_dev_dockers.yml  \
+# $ ansible-playbook -i build01, build_custom_dockers.yml  \
 #       --become --become-user root --ask-become-pass
 - hosts: all
   vars_files:
@@ -51,15 +51,16 @@
           See vars/settings.yml.template for details.
 
     - assert:
-        that: dev_docker_base_image is defined
+        that: custom_docker_base_image_tag is defined
         msg: >
-          'dev_docker_base_image' should specify the base image to be used to create docker images.
+          'custom_docker_base_image_tag' should specify the base image to be
+          used to create docker images.
           See vars/settings.yml.template for details.
 
     - assert:
-        that: dev_docker_tag is defined
+        that: custom_docker_tag is defined
         msg: >
-          'dev_docker_tag' should specify docker tag string.
+          'custom_docker_tag' should specify docker tag string.
           See vars/settings.yml.template for details.
 
     - name: Create a temporary workdir
@@ -69,38 +70,13 @@
     - name: Set workdir as fact
       set_fact: _workdir="{{ _workdir_register.stdout }}"
 
-    - name: Creates the jar directory in workspace
-      file: path="{{ _workdir }}/jars" state=directory
-
-    - name: Copy the jar file to workspace jars directory
-      copy: src="{{ spark_kubernetes_jar_path }}" dest="{{ _workdir }}/jars" remote_src=True
-
-    - name : Generate Dockerfile content
-      set_fact: dockerfile_content="FROM {{ dev_docker_base_image }}\nCOPY jars /opt/spark/jars\n"
-
-    # Create a blank file
-    - name: Create an empty Dockerfile
-      file: path="{{ _workdir }}/Dockerfile" state=touch
-
-    - name: Write to Dockerfile
-      copy: content="{{ dockerfile_content }}" dest="{{ _workdir }}/Dockerfile"
-
     - block:
-        # NOTE. The unarchive module is broken with macOS BSD tar. Install
-        # GNU tar and make sure your path points it for the tar command.
-        # See https://github.com/ansible/ansible-modules-core/issues/3952.
-        - name: Build and push images
-          shell: >
-            docker build --no-cache  \
-                -t {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}  \
-                -f Dockerfile .  &&
-            docker push {{ docker_registry }}/spark-{{ item }}:{{ dev_docker_tag }}
-          args:
-            chdir: "{{ _workdir }}"
-          with_items:
-            - driver
-            - executor
-            - init-container
+
+      - include: gen_dockerfile_and_build.yml workdir="{{ _workdir }} container="{{ item }}"
+        with_items:
+          - driver
+          - executor
+          - init-container
 
     - always:
         - name: Remove workdir

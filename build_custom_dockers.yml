@@ -56,7 +56,7 @@
     - assert:
         that: custom_docker_extra_files is defined
         msg: >
-          'custom_docker_extra_files' should be dfined.
+          'custom_docker_extra_files' should be defined.
           See vars/settings.yml.template for details.
 
     - name: Create a temporary workdir

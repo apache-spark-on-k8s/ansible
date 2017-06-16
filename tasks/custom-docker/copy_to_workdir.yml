@@ -13,17 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: "Fill out Dockerfile for a custom docker spark-{{ container }}"
-  template:
-    src: "templates/custom-docker/Dockerfile.j2"
-    dest: "{{ workdir }}/Dockerfile"
-    backup: yes
+- name: "Ensure subdirs exist in {{ workdir }}/tmp"
+  file:
+    path: "{{ workdir }}/tmp{{ file_or_dir.source | dirname }}"
+    recurse: yes
+    state: directory
+  with_items: "{{ custom_docker_extra_files }}"
 
-- name: "Build and push images for a custom docker spark-{{ container }}"
-  shell: >
-    docker build --no-cache  \
-        -t {{ docker_registry }}/spark-{{ container }}:{{ custom_docker_tag }}  \
-        -f Dockerfile .  &&
-    docker push {{ docker_registry }}/spark-{{ container }}:{{ custom_docker_tag }}
-  args:
-    chdir: "{{ workdir }}"
+- name: "Copy files to {{ workdir }}/tmp that Dockerfile can refer to"
+  copy:
+    src: "{{ file_or_dir.source }}"
+    dest: "{{ workdir }}/tmp{{ file_or_dir.source }}"
+    mode: "{{ file_or_dir.mode | default('0644') }}"
+    backup: yes
+  with_items: "{{ custom_docker_extra_files }}"

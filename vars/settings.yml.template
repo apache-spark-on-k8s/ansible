@@ -70,7 +70,8 @@ install_dir: /opt/
 # Each item should have the source and target paths. The source path is a local
 # file or directory. The target path is a file or directory inside the docker.
 # The source file or directory will be copied to a subdir inside the work dir
-# and supplied to the docker COPY command.
+# and supplied to the docker COPY command. Optionally, file mode can be
+# specified per file item. (Default is "0644")
 #
 # Examples:
 # custom_docker_extra_files:
@@ -78,5 +79,6 @@ install_dir: /opt/
 #     target: /opt/spark/jars/
 #   - source: /mydir/log4j.properties
 #     target: /opt/spark/conf/
+#     mode: "0444"
 #
 #custom_docker_extra_files:

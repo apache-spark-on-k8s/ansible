@@ -68,17 +68,7 @@
 
     - block:
 
-      - name: "Ensure subdirs exist in {{ _workdir }}/tmp"
-        file:
-          path: "{{ _workdir }}/tmp{{ item.source | dirname }}"
-          recurse: yes
-          state: directory
-        with_items: "{{ custom_docker_extra_files }}"
-
-      - name: "Copy files to {{ _workdir }}/tmp that Dockerfile can refer to"
-        copy:
-          src: "{{ item.source }}"
-          dest: "{{ _workdir }}/tmp{{ item.source }}"
+      - include: tasks/custom-docker/copy_to_workdir.yml workdir="{{ _workdir }}" file_or_dir="{{ item }}"
         with_items: "{{ custom_docker_extra_files }}"
 
       - include: tasks/custom-docker/gen_dockerfile_and_build.yml workdir="{{ _workdir }}" container="{{ item }}"

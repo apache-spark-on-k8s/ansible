@@ -1,0 +1,84 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Usage:
+#      $ cp vars/settings.yml.template vars/settings.yml
+#
+#      Fill out vars/settings.yml.
+#
+#      $ ansible-playbook -i TARGET-HOST build_custom_dockers.yml [OPTIONS]...
+#
+# Required parameters should be specified in vars/settings.yml or --extra-vars
+# ansible command line parameter. For details, see vars/settings.yml.template.
+#
+# Examples:
+# To run on your localhost (Note comma is needed after localhost):
+# $ ansible-playbook -i localhost, build_custom_dockers.yml -c local
+- hosts: all
+  vars_files:
+    - vars/settings.yml
+  tasks:
+    - assert:
+        that: ansible_version.major >= 2
+        msg: "Only supports ansible version 2.x."
+
+    - assert:
+        that: docker_registry is defined
+        msg: >
+          'docker_registry' should specify docker registry host and port.
+          See vars/settings.yml.template for details.
+
+    - assert:
+        that: docker_tag is defined
+        msg: >
+          'docker_tag' should specify a docker tag string pointing to
+          dockers that custom docker images would use as base images.
+          See vars/settings.yml.template for details.
+
+    - assert:
+        that: custom_docker_tag is defined
+        msg: >
+          'custom_docker_tag' should specify a docker tag string.
+          See vars/settings.yml.template for details.
+
+    - assert:
+        that: custom_docker_extra_files is defined
+        msg: >
+          'custom_docker_extra_files' should be defined.
+          See vars/settings.yml.template for details.
+
+    - name: Create a temporary workdir
+      command: mktemp -d /tmp/build-images-workdir-XXXXX
+      register: _workdir_register
+
+    - name: Set workdir as fact
+      set_fact: _workdir="{{ _workdir_register.stdout }}"
+
+    - block:
+
+      - include: tasks/custom-docker/copy_to_workdir.yml workdir="{{ _workdir }}" file_or_dir="{{ item }}"
+        with_items: "{{ custom_docker_extra_files }}"
+
+      - include: tasks/custom-docker/gen_dockerfile_and_build.yml workdir="{{ _workdir }}" container="{{ item }}"
+        with_items:
+          - driver
+          - executor
+          - init-container
+
+    - always:
+        - name: Remove workdir
+          file:
+            path: "{{ _workdir }}"
+            state: absent

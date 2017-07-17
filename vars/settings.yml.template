@@ -82,3 +82,15 @@ install_dir: /opt/
 #     mode: "0444"
 #
 #custom_docker_extra_files:
+
+# List of extra environment variables to set in the custom docker instances.
+# Each item should have the name and value strings.
+#
+# Examples:
+# custom_docker_extra_envs:
+#   - name: ENV1
+#     value: value1
+#   - name: ENV2
+#     value: value2
+#
+#custom_docker_extra_envs:

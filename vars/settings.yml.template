@@ -66,11 +66,11 @@ install_dir: /opt/
 #
 #custom_docker_tag: custom_latest
 
-# List of extra files or directories to copy to the custom docker images.
-# Each item should have the source and target paths. The source path is a local
-# file or directory. The target path is a file or directory inside the docker.
-# The source file or directory will be copied to a subdir inside the work dir
-# and supplied to the docker COPY command. Optionally, file mode can be
+# Optional. List of extra files or directories to copy to the custom docker
+# images. Each item should have the source and target paths. The source path is
+# a local file or directory. The target path is a file or directory inside the
+# docker.  The source file or directory will be copied to a subdir inside the
+# work dir and supplied to the docker COPY command. Optionally, file mode can be
 # specified per file item. (Default is "0644")
 #
 # Examples:
@@ -80,11 +80,9 @@ install_dir: /opt/
 #   - source: /mydir/log4j.properties
 #     target: /opt/spark/conf/
 #     mode: "0444"
-#
-#custom_docker_extra_files:
 
-# List of extra environment variables to set in the custom docker instances.
-# Each item should have the name and value strings.
+# Optional. List of extra environment variables to set in the custom docker
+# instances. Each item should have the name and value strings.
 #
 # Examples:
 # custom_docker_extra_envs:
@@ -92,5 +90,3 @@ install_dir: /opt/
 #     value: value1
 #   - name: ENV2
 #     value: value2
-#
-#custom_docker_extra_envs:

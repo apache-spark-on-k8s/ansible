@@ -53,12 +53,6 @@
           'custom_docker_tag' should specify a docker tag string.
           See vars/settings.yml.template for details.
 
-    - assert:
-        that: custom_docker_extra_files is defined
-        msg: >
-          'custom_docker_extra_files' should be defined.
-          See vars/settings.yml.template for details.
-
     - name: Create a temporary workdir
       command: mktemp -d /tmp/build-images-workdir-XXXXX
       register: _workdir_register

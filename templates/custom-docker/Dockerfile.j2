@@ -16,10 +16,14 @@
 #}
 FROM {{ docker_registry }}/spark-{{ container }}:{{ docker_tag }}
 
+{% if custom_docker_extra_files is defined %}
 {% for item in custom_docker_extra_files %}
 COPY tmp{{ item.source }} {{ item.target }}
 {% endfor %}
+{% endif %}
 
+{% if custom_docker_extra_envs is defined %}
 {% for item in custom_docker_extra_envs %}
 ENV {{ item.name }} {{ item.value }}
 {% endfor %}
+{% endif %}
